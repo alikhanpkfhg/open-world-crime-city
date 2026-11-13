@@ -17,6 +17,18 @@ A small open-world, GTA-style crime sandbox for Android, made with Godot 4.3 (GL
 ### Keyboard (editor testing)
 WASD move, Space jump/brake, E enter/exit, Q switch weapon, F fire, Shift brake. Mouse drag = look (touch emulation is on).
 
+## Home
+
+The game starts in the player's house (`scripts/house.gd`): a small house on its
+own block of the city, with a furnished room behind the door. The room sits
+directly below the house, so the map, traffic and police keep treating the
+player as standing at home.
+
+- Press ENTER at the room's door to step out onto the street in front of the house.
+- Walk back to the house door and press ENTER (the button reads HOME) to go inside.
+- The house has a blue house icon on the minimap; deaths respawn you on the
+  street outside it.
+
 ## Characters
 
 The player and the pedestrians are real rigged, skinned 3D characters with

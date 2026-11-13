@@ -7,3 +7,8 @@ build/
 *.aab
 *.keystore
 export_credentials.cfg
+
+# Local secrets (see .env.example)
+.env
+.env.*
+!.env.example

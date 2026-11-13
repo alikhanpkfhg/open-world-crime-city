@@ -121,7 +121,7 @@ func _physics_process(dt: float) -> void:
 	_find_car()
 	if G.fire_held():
 		_shoot()
-	if global_position.y < -5.0:
+	if global_position.y < -60.0:
 		global_position = spawn_pos
 		velocity = Vector3.ZERO
 
@@ -269,7 +269,10 @@ func _on_interact() -> void:
 		return
 	if in_car != null:
 		exit_car(false)
-	elif near_car != null:
+		return
+	if G.house != null and G.house.try_use(self):
+		return
+	if near_car != null:
 		enter_car(near_car)
 
 
@@ -308,6 +311,16 @@ func exit_car(forced: bool) -> void:
 	velocity = Vector3.ZERO
 	if forced:
 		health -= 8.0
+
+
+# Moves the player somewhere else at once (house door, respawn), leaving any car.
+func teleport(pos: Vector3) -> void:
+	if in_car != null:
+		exit_car(false)
+	global_position = pos
+	velocity = Vector3.ZERO
+	jump_req = false
+	model.rotation.y = G.cam_yaw
 
 
 func take_damage(amount: float, _dir: Vector3 = Vector3.ZERO, _by_player: bool = false) -> void:

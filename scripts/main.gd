@@ -7,6 +7,7 @@ const PedScript = preload("res://scripts/ped.gd")
 const PickupScript = preload("res://scripts/pickup.gd")
 const PlayerScript = preload("res://scripts/player.gd")
 const HudScript = preload("res://scripts/hud.gd")
+const HouseScript = preload("res://scripts/house.gd")
 
 const CARS: Array = [
 	preload("res://models/cars/vehicle-truck-yellow.glb"),
@@ -40,6 +41,7 @@ var health_timer: float = 20.0
 var beacon: MeshInstance3D
 var beacon_ring: MeshInstance3D
 var player
+var house
 
 
 func _ready() -> void:
@@ -49,6 +51,7 @@ func _ready() -> void:
 	_build_roads()
 	_build_markings()
 	_build_blocks()
+	_build_house()
 	_build_player()
 	_build_hud()
 	_spawn_starters()
@@ -60,7 +63,7 @@ func _ready() -> void:
 	_spawn_pickups()
 	_build_marker()
 	G.ped_died.connect(func() -> void: ped_pending += 1)
-	G.message.emit("Welcome to Crime City")
+	G.message.emit("You wake up at home - press ENTER at the door")
 	# Roadmap
 	# 1. More vehicles (sports car, police cruiser model) and motorbikes.
 	# 2. Missions: timed deliveries, chase-the-suspect, taxi fares.
@@ -220,7 +223,7 @@ func _build_blocks() -> void:
 	var parks: Array = [Vector2i(3, 3)]
 	while parks.size() < 5:
 		var v := Vector2i(randi() % 6, randi() % 6)
-		if not parks.has(v):
+		if not parks.has(v) and v != HouseScript.BLOCK:
 			parks.append(v)
 	for bi in range(6):
 		for bj in range(6):
@@ -230,7 +233,8 @@ func _build_blocks() -> void:
 			add_child(body)
 			body.position = Vector3(U.BLOCK_C[bi], 0.0, U.BLOCK_C[bj])
 			var is_park: bool = parks.has(Vector2i(bi, bj))
-			var slab: MeshInstance3D = U.box(Vector3(64.0, U.CURB, 64.0), park_mat if is_park else slab_mat)
+			var is_home: bool = Vector2i(bi, bj) == HouseScript.BLOCK
+			var slab: MeshInstance3D = U.box(Vector3(64.0, U.CURB, 64.0), park_mat if (is_park or is_home) else slab_mat)
 			slab.position = Vector3(0.0, U.CURB * 0.5, 0.0)
 			slab.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 			body.add_child(slab)
@@ -242,7 +246,7 @@ func _build_blocks() -> void:
 			body.add_child(cs)
 			if is_park:
 				_fill_park(body)
-			else:
+			elif not is_home:
 				_fill_buildings(body)
 
 
@@ -301,11 +305,22 @@ func _fill_park(body: StaticBody3D) -> void:
 
 # ------------------------------------------------------------ actors
 
+func _build_house() -> void:
+	house = HouseScript.new()
+	house.name = "House"
+	add_child(house)
+	house.build()
+	G.house = house
+	G.house_pos = house.city_pos
+
+
 func _build_player() -> void:
 	player = PlayerScript.new()
-	player.spawn_pos = Vector3(22.0, 0.3, 10.2)
+	player.spawn_pos = house.exit_pos
 	add_child(player)
-	player.global_position = player.spawn_pos
+	player.global_position = house.interior_spawn
+	G.cam_yaw = -PI * 0.5
+	player.model.rotation.y = G.cam_yaw
 
 
 func _build_hud() -> void:

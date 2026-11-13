@@ -39,6 +39,9 @@ func _buttons() -> Array:
 	var s: Vector2 = size
 	var in_car: bool = G.in_car != null
 	var near: bool = G.player != null and G.player.near_car != null
+	var home: String = ""
+	if G.house != null and G.player != null:
+		home = G.house.prompt(G.player)
 	var out: Array = []
 	if not in_car:
 		out.append({"k": "fire", "c": Vector2(s.x - 150.0, s.y - 150.0), "r": 85.0, "t": "FIRE", "col": Color(0.9, 0.2, 0.2)})
@@ -54,6 +57,9 @@ func _buttons() -> Array:
 	if in_car:
 		ut = "EXIT"
 		ucol = Color(0.3, 0.75, 0.4)
+	elif home != "":
+		ut = home
+		ucol = Color(0.3, 0.85, 0.45)
 	elif near:
 		ut = "ENTER"
 		ucol = Color(0.3, 0.85, 0.45)
@@ -183,6 +189,8 @@ func _draw() -> void:
 	var obj: String = "Steal a car: walk up to one and press ENTER"
 	if G.in_car != null:
 		obj = "Deliver the car to the yellow beacon"
+	elif G.house != null and G.house.is_inside(pl):
+		obj = "Home: press ENTER at the door to go outside"
 	_ctext(36.0, obj, 22, Color(1, 0.95, 0.6))
 	# Messages
 	var y: float = 74.0
@@ -219,6 +227,8 @@ func _minimap(s: Vector2) -> void:
 		if r.has_point(cp):
 			var cc: Color = Color(1, 0.2, 0.2) if int(age * 4.0) % 2 == 0 else Color(0.3, 0.5, 1.0)
 			draw_circle(cp, 5.0, cc)
+	var hp: Vector2 = ctr + Vector2(G.house_pos.x - pp.x, G.house_pos.z - pp.z) * sc
+	_home_icon(hp.clamp(r.position + Vector2(9, 9), r.end - Vector2(9, 9)), Color(0.45, 0.8, 1.0))
 	var mp: Vector2 = ctr + Vector2(G.marker_pos.x - pp.x, G.marker_pos.z - pp.z) * sc
 	mp = mp.clamp(r.position + Vector2(6, 6), r.end - Vector2(6, 6))
 	draw_circle(mp, 6.0, Color(1.0, 0.9, 0.2))
@@ -228,6 +238,12 @@ func _minimap(s: Vector2) -> void:
 	var tri := PackedVector2Array([ctr + f * 9.0, ctr - f * 6.0 + n * 6.0, ctr - f * 6.0 - n * 6.0])
 	draw_colored_polygon(tri, Color(1, 1, 1))
 	draw_rect(r, Color(1, 1, 1, 0.5), false, 2.0)
+
+
+func _home_icon(c: Vector2, col: Color) -> void:
+	draw_rect(Rect2(c + Vector2(-6.0, -1.0), Vector2(12.0, 9.0)), col)
+	var roof := PackedVector2Array([c + Vector2(-8.0, -1.0), c + Vector2(8.0, -1.0), c + Vector2(0.0, -9.0)])
+	draw_colored_polygon(roof, col)
 
 
 func _draw_controls() -> void:

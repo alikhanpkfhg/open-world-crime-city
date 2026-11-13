@@ -28,6 +28,9 @@ var marker_pos: Vector3 = Vector3.ZERO
 # Untyped on purpose: these are duck-typed scripts (player.gd / car.gd).
 var player = null
 var in_car = null
+# Set by main.gd: the player's house (house.gd) and where it sits on the map.
+var house = null
+var house_pos: Vector3 = Vector3.ZERO
 
 
 func get_move() -> Vector2:
