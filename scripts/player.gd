@@ -101,7 +101,10 @@ func _process(dt: float) -> void:
 	var h: Dictionary = get_world_3d().direct_space_state.intersect_ray(q)
 	if not h.is_empty():
 		want = (h["position"] as Vector3) + (tpos - want).normalized() * 0.3
-	want.y = maxf(want.y, 0.35)
+	# Keep the camera above the ground the player stands on. A hard street-level
+	# clamp would bury the camera in the ground slab above the house room, which
+	# sits 20 m below the city.
+	want.y = maxf(want.y, global_position.y + 0.35)
 	cam.global_position = want
 	cam.look_at(tpos + rgt * shoulder, Vector3.UP)
 
