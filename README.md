@@ -21,7 +21,8 @@ WASD move, Space jump/brake, E enter/exit, Q switch weapon, F fire, Shift brake.
 ## Main menu
 
 The game opens on a title screen (`scripts/menu.gd`): CRIME CITY over a dark
-panel, with the fully built city paused behind it. PLAY unpauses the world.
+panel, with the fully built city paused behind it. Tap anywhere (or press
+Space/Enter on a keyboard) to play.
 
 ## Home
 
