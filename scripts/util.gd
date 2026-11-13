@@ -113,6 +113,41 @@ static func fit_box(scene: PackedScene, w: float, d: float, h: float) -> Node3D:
 	return holder
 
 
+# The rocket launcher: no model in the asset pool, so it is built from
+# primitives (a tube, grip, sight and a red warhead tip), aimed down -Z.
+static func rocket_launcher() -> Node3D:
+	var holder := Node3D.new()
+	var tube := MeshInstance3D.new()
+	var cm := CylinderMesh.new()
+	cm.top_radius = 0.09
+	cm.bottom_radius = 0.09
+	cm.height = 0.95
+	cm.radial_segments = 12
+	tube.mesh = cm
+	tube.rotation.x = PI * 0.5
+	tube.material_override = mat(Color(0.36, 0.42, 0.3), 0.55)
+	tube.position = Vector3(0.0, 0.0, -0.12)
+	holder.add_child(tube)
+	var tip := MeshInstance3D.new()
+	var cone := CylinderMesh.new()
+	cone.top_radius = 0.0
+	cone.bottom_radius = 0.09
+	cone.height = 0.2
+	cone.radial_segments = 12
+	tip.mesh = cone
+	tip.rotation.x = -PI * 0.5
+	tip.position = Vector3(0.0, 0.0, -0.7)
+	tip.material_override = mat(Color(0.75, 0.2, 0.15), 0.5)
+	holder.add_child(tip)
+	var grip := box(Vector3(0.09, 0.24, 0.15), mat(Color(0.2, 0.2, 0.22), 0.7))
+	grip.position = Vector3(0.0, -0.17, 0.06)
+	holder.add_child(grip)
+	var sight := box(Vector3(0.05, 0.1, 0.12), mat(Color(0.15, 0.15, 0.17), 0.7))
+	sight.position = Vector3(0.0, 0.14, 0.12)
+	holder.add_child(sight)
+	return holder
+
+
 static func set_vis_range(root: Node, dist: float) -> void:
 	for n in root.find_children("*", "MeshInstance3D", true, false):
 		(n as MeshInstance3D).visibility_range_end = dist

@@ -7,6 +7,7 @@ const PedScript = preload("res://scripts/ped.gd")
 const PickupScript = preload("res://scripts/pickup.gd")
 const PlayerScript = preload("res://scripts/player.gd")
 const HudScript = preload("res://scripts/hud.gd")
+const MenuScript = preload("res://scripts/menu.gd")
 const HouseScript = preload("res://scripts/house.gd")
 
 const CARS: Array = [
@@ -42,6 +43,7 @@ var beacon: MeshInstance3D
 var beacon_ring: MeshInstance3D
 var player
 var house
+var menu
 
 
 func _ready() -> void:
@@ -64,6 +66,7 @@ func _ready() -> void:
 	_build_marker()
 	G.ped_died.connect(func() -> void: ped_pending += 1)
 	G.message.emit("You wake up at home - press ENTER at the door")
+	_build_menu()
 	# Roadmap
 	# 1. More vehicles (sports car, police cruiser model) and motorbikes.
 	# 2. Missions: timed deliveries, chase-the-suspect, taxi fares.
@@ -321,6 +324,7 @@ func _build_player() -> void:
 	player.global_position = house.interior_spawn
 	G.cam_yaw = -PI * 0.5
 	player.model.rotation.y = G.cam_yaw
+	player._process(0.0)  # Place the camera once, before the menu unpauses.
 
 
 func _build_hud() -> void:
@@ -329,6 +333,13 @@ func _build_hud() -> void:
 	var hud := Control.new()
 	hud.set_script(HudScript)
 	layer.add_child(hud)
+
+
+func _build_menu() -> void:
+	menu = MenuScript.new()
+	menu.name = "MainMenu"
+	add_child(menu)
+	get_tree().paused = true
 
 
 func _make_car(idx: int, mode: int):

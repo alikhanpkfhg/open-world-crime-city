@@ -3,6 +3,7 @@ extends CharacterBody3D
 
 const U = preload("res://scripts/util.gd")
 const C = preload("res://scripts/char_model.gd")
+const RocketScript = preload("res://scripts/rocket.gd")
 
 # Some gun models point +Z; flip this one line if a weapon looks back to front.
 const GUN_YAW: float = PI
@@ -10,6 +11,7 @@ const GUN_YAW: float = PI
 const WEAPONS: Array = [
 	{"name": "Repeater", "model": preload("res://models/weapons/blaster-repeater.glb"), "dmg": 14.0, "cd": 0.12, "pellets": 1, "spread": 0.012, "range": 75.0, "snd": "res://audio/blaster_repeater.ogg"},
 	{"name": "Scattergun", "model": preload("res://models/weapons/blaster.glb"), "dmg": 16.0, "cd": 0.55, "pellets": 5, "spread": 0.075, "range": 42.0, "snd": "res://audio/blaster.ogg"},
+	{"name": "Rocket Launcher", "model": null, "dmg": 0.0, "cd": 1.4, "pellets": 1, "spread": 0.0, "range": 95.0, "snd": "res://audio/impact.ogg", "rocket": true},
 ]
 
 var health: float = 100.0
@@ -53,7 +55,7 @@ func _ready() -> void:
 	gun_holder.position = Vector3(0.3, 1.14, -0.3)
 	model.add_child(gun_holder)
 	for w in WEAPONS:
-		var g: Node3D = U.fit_len(w["model"], 0.7)
+		var g: Node3D = U.rocket_launcher() if w.get("rocket", false) else U.fit_len(w["model"], 0.7)
 		g.rotation.y = GUN_YAW
 		g.position = Vector3(0.0, -0.06, -0.12)
 		g.visible = false
@@ -202,6 +204,9 @@ func _shoot() -> void:
 		return
 	var w: Dictionary = WEAPONS[wi]
 	cd = w["cd"]
+	if w.get("rocket", false):
+		_fire_rocket()
+		return
 	var fwd: Vector3 = -cam.global_transform.basis.z
 	var head: Vector3 = global_position + Vector3(0.0, 1.5, 0.0)
 	var start: Vector3 = cam.global_position + fwd * (cam.global_position.distance_to(head) * 0.9)
@@ -232,6 +237,18 @@ func _shoot() -> void:
 		_apply_hit(collider, hit_pos, d, w["dmg"])
 		U.tracer(parent, muzzle, hit_pos)
 		U.spark(parent, hit_pos, Color(1.0, 0.85, 0.35), 0.12)
+
+
+# Rockets fly from the muzzle along the camera's aim and blow up on contact.
+func _fire_rocket() -> void:
+	var fwd: Vector3 = -cam.global_transform.basis.z
+	var yawm: float = model.rotation.y
+	var muzzle: Vector3 = gun_holder.global_position + Vector3(-sin(yawm), 0.0, -cos(yawm)) * 0.6
+	G.sfx("res://audio/impact.ogg", muzzle, -4.0, 1.3)
+	U.spark(get_parent(), muzzle, Color(1.0, 0.7, 0.3), 0.5)
+	var r = RocketScript.new()
+	get_parent().add_child(r)
+	r.start(muzzle, fwd)
 
 
 func _assist(start: Vector3, fwd: Vector3, rng_m: float, space: PhysicsDirectSpaceState3D, muzzle: Vector3) -> Node3D:

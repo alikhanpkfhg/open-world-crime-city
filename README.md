@@ -8,6 +8,7 @@ A small open-world, GTA-style crime sandbox for Android, made with Godot 4.3 (GL
 - Wanted level (stars) rises with crimes; cops chase, shoot and ram you. Survive until the stars fade, or wreck cop cars for cash.
 - Deliver cars to the yellow beacon for money. Pick up red health crates and cash on the sidewalks.
 - Cars that are shot or crashed to zero health catch fire and explode.
+- Three weapons cycle with GUN: Repeater, Scattergun and a Rocket Launcher whose rockets fly from the muzzle and explode on impact — blast damage to cars, pedestrians, corpses and you, so mind your own feet.
 
 ### Touch controls
 - Left half of the screen: floating move stick (steer/throttle in a car)
@@ -16,6 +17,11 @@ A small open-world, GTA-style crime sandbox for Android, made with Godot 4.3 (GL
 
 ### Keyboard (editor testing)
 WASD move, Space jump/brake, E enter/exit, Q switch weapon, F fire, Shift brake. Mouse drag = look (touch emulation is on).
+
+## Main menu
+
+The game opens on a title screen (`scripts/menu.gd`): CRIME CITY over a dark
+panel, with the fully built city paused behind it. PLAY unpauses the world.
 
 ## Home
 
