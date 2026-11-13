@@ -3,6 +3,7 @@ extends CharacterBody3D
 
 const U = preload("res://scripts/util.gd")
 const H = preload("res://scripts/humanoid.gd")
+const C = preload("res://scripts/char_model.gd")
 const PickupScript = preload("res://scripts/pickup.gd")
 
 var parts: Dictionary = {}
@@ -16,7 +17,6 @@ var target: Vector3 = Vector3.ZERO
 var speed: float = 1.6
 var panic: float = 0.0
 var hp: float = 50.0
-var phase: float = 0.0
 var dead: bool = false
 
 
@@ -32,11 +32,12 @@ func _ready() -> void:
 	cs.position = Vector3(0.0, 0.9, 0.0)
 	add_child(cs)
 	colors = H.random_colors()
-	parts = H.build(colors[0], colors[1], colors[2])
+	parts = C.build(C.pick(), colors[0], colors[1], colors[2], Color(0, 0, 0, 0), randf_range(0.94, 1.06))
+	if not parts["fallback"]:
+		C.tint(parts, colors[0].lerp(Color.WHITE, 0.35))
 	model = parts["root"]
 	add_child(model)
 	speed = randf_range(1.3, 2.0)
-	phase = randf() * 6.0
 
 
 func place(i: int, j: int) -> void:
@@ -94,8 +95,9 @@ func _physics_process(dt: float) -> void:
 	global_position.y = U.CURB
 	rotation.y = lerp_angle(rotation.y, atan2(-dirv.x, -dirv.z), minf(1.0, 8.0 * dt))
 	if near:
-		phase += sp * dt * 3.0
-		H.animate(parts, phase, clampf(sp / 2.0, 0.4, 1.4), false)
+		C.animate(parts, sp, false, dt)
+	else:
+		C.pause(parts, true)
 
 
 func take_damage(amount: float, dir: Vector3, by_player: bool) -> void:
@@ -126,7 +128,7 @@ func die(impulse: Vector3) -> void:
 		return
 	dead = true
 	var parent: Node = get_parent()
-	H.spawn_ragdoll(parent, model.global_transform, colors, impulse)
+	C.spawn_corpse(parent, parts, model.global_transform, impulse)
 	var pk = PickupScript.new()
 	pk.kind = "cash"
 	pk.value = randi_range(15, 90)

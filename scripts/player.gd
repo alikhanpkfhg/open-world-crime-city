@@ -2,7 +2,10 @@ extends CharacterBody3D
 # The player on foot. Also owns the third-person camera (and keeps following the car).
 
 const U = preload("res://scripts/util.gd")
-const H = preload("res://scripts/humanoid.gd")
+const C = preload("res://scripts/char_model.gd")
+
+# Some gun models point +Z; flip this one line if a weapon looks back to front.
+const GUN_YAW: float = PI
 
 const WEAPONS: Array = [
 	{"name": "Repeater", "model": preload("res://models/weapons/blaster-repeater.glb"), "dmg": 14.0, "cd": 0.12, "pellets": 1, "spread": 0.012, "range": 75.0, "snd": "res://audio/blaster_repeater.ogg"},
@@ -13,6 +16,7 @@ var health: float = 100.0
 var dead: bool = false
 var parts: Dictionary = {}
 var model: Node3D
+var hand_ref: Node3D
 var gun_holder: Node3D
 var guns: Array = []
 var wi: int = 0
@@ -23,7 +27,6 @@ var last_look: float = -10.0
 var in_car = null
 var near_car = null
 var jump_req: bool = false
-var phase: float = 0.0
 var pick_t: float = 0.0
 var spawn_pos: Vector3 = Vector3(-3.0, 0.2, 16.0)
 var skin: Color = Color(0.9, 0.72, 0.58)
@@ -42,16 +45,17 @@ func _ready() -> void:
 	cs.shape = cap
 	cs.position = Vector3(0.0, 0.9, 0.0)
 	add_child(cs)
-	parts = H.build(Color(0.12, 0.42, 0.58), Color(0.12, 0.12, 0.16), skin, Color(0.95, 0.8, 0.2))
+	parts = C.build(C.SOLDIER, Color(0.12, 0.42, 0.58), Color(0.12, 0.12, 0.16), skin, Color(0.95, 0.8, 0.2))
 	model = parts["root"]
 	add_child(model)
+	hand_ref = parts.get("hand", null) as Node3D
 	gun_holder = Node3D.new()
 	gun_holder.position = Vector3(0.3, 1.14, -0.3)
 	model.add_child(gun_holder)
 	for w in WEAPONS:
 		var g: Node3D = U.fit_len(w["model"], 0.7)
-		g.rotation.y = PI
-		g.position = Vector3(0.0, -0.1, 0.0)
+		g.rotation.y = GUN_YAW
+		g.position = Vector3(0.0, -0.06, -0.12)
 		g.visible = false
 		gun_holder.add_child(g)
 		guns.append(g)
@@ -145,9 +149,17 @@ func _move(dt: float) -> void:
 	elif dir.length() > 0.1:
 		face = atan2(-dir.x, -dir.z)
 	model.rotation.y = lerp_angle(model.rotation.y, face, minf(1.0, 12.0 * dt))
+	_mount_gun()
 	var spd: float = hv.length()
-	phase += spd * dt * 2.4
-	H.animate(parts, phase, clampf(spd / 5.0, 0.0, 1.0), true)
+	C.animate(parts, spd, G.fire_held(), dt)
+
+
+# Keeps the gun at the character's right hand, aimed where the body faces.
+func _mount_gun() -> void:
+	if hand_ref == null or not is_instance_valid(hand_ref):
+		return
+	gun_holder.global_position = hand_ref.global_position
+	gun_holder.global_basis = Basis(Vector3.UP, model.rotation.y)
 
 
 func _find_car() -> void:
@@ -313,7 +325,7 @@ func die() -> void:
 	dead = true
 	if in_car != null:
 		exit_car(true)
-	H.spawn_ragdoll(get_parent(), model.global_transform, [Color(0.12, 0.42, 0.58), Color(0.12, 0.12, 0.16), skin], Vector3(0.0, 3.0, 0.0))
+	C.spawn_corpse(get_parent(), parts, model.global_transform, Vector3(0.0, 3.0, 0.0))
 	model.visible = false
 	collision_layer = 0
 	collision_mask = 0
